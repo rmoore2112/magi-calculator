@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block title %}Error - MAGI Calculator{% endblock %}
+
+{% block content %}
+<div class="error-container">
+    <h2>Error</h2>
+    <div class="error-message">
+        <p>{{ error }}</p>
+    </div>
+    <div class="form-actions">
+        <a href="/" class="btn-primary">Go Back</a>
+    </div>
+</div>
+{% endblock %}

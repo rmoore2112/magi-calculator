@@ -1,0 +1,505 @@
+{% extends "base.html" %}
+
+{% block title %}MAGI Report - Results{% endblock %}
+
+{% block content %}
+<div class="report-header">
+    <h2>Your MAGI Calculation Results</h2>
+    <div class="key-metrics">
+        <div class="metric-card">
+            <div class="metric-label">Total Income</div>
+            <div class="metric-value">${{ "{:,.2f}".format(result.total_income) }}</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-label">Adjusted Gross Income (AGI)</div>
+            <div class="metric-value">${{ "{:,.2f}".format(result.agi) }}</div>
+        </div>
+        <div class="metric-card highlight">
+            <div class="metric-label">Modified AGI (MAGI)</div>
+            <div class="metric-value">${{ "{:,.2f}".format(result.magi) }}</div>
+        </div>
+    </div>
+    <div class="filing-info">
+        <p><strong>Filing Status:</strong> {{ result.filing_status }}</p>
+        <p><strong>Tax Year:</strong> {{ result.tax_year }}</p>
+        <p><strong>IRMAA Tier:</strong> {{ irmaa_info.tier }}</p>
+    </div>
+</div>
+
+<section class="report-section">
+    <h3>Income Breakdown</h3>
+    <div id="income-pie-chart"></div>
+
+    <div class="income-details">
+        <div class="detail-group">
+            <h4>Investment Income</h4>
+            <table class="data-table">
+                <tr>
+                    <td>Short-Term Capital Gains</td>
+                    <td class="amount">${{ "{:,.2f}".format(result.income_breakdown.investment_income.short_term_capital_gains) }}</td>
+                </tr>
+                <tr>
+                    <td>Long-Term Capital Gains</td>
+                    <td class="amount">${{ "{:,.2f}".format(result.income_breakdown.investment_income.long_term_capital_gains) }}</td>
+                </tr>
+                <tr>
+                    <td>Dividend Income</td>
+                    <td class="amount">${{ "{:,.2f}".format(result.income_breakdown.investment_income.dividend_income) }}</td>
+                </tr>
+                <tr>
+                    <td>Interest Income</td>
+                    <td class="amount">${{ "{:,.2f}".format(result.income_breakdown.investment_income.interest_income) }}</td>
+                </tr>
+                <tr class="total-row">
+                    <td><strong>Total Investment Income</strong></td>
+                    <td class="amount"><strong>${{ "{:,.2f}".format(result.income_breakdown.investment_income.total) }}</strong></td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="detail-group">
+            <h4>Additional Income</h4>
+            <table class="data-table">
+                <tr>
+                    <td>Wages</td>
+                    <td class="amount">${{ "{:,.2f}".format(result.income_breakdown.additional_income.wages) }}</td>
+                </tr>
+                <tr>
+                    <td>Business Income</td>
+                    <td class="amount">${{ "{:,.2f}".format(result.income_breakdown.additional_income.business_income) }}</td>
+                </tr>
+                <tr>
+                    <td>Rental Income</td>
+                    <td class="amount">${{ "{:,.2f}".format(result.income_breakdown.additional_income.rental_income) }}</td>
+                </tr>
+                <tr>
+                    <td>Retirement Income</td>
+                    <td class="amount">${{ "{:,.2f}".format(result.income_breakdown.additional_income.retirement_income) }}</td>
+                </tr>
+                <tr>
+                    <td>Social Security</td>
+                    <td class="amount">${{ "{:,.2f}".format(result.income_breakdown.additional_income.social_security) }}</td>
+                </tr>
+                <tr>
+                    <td>Other Income</td>
+                    <td class="amount">${{ "{:,.2f}".format(result.income_breakdown.additional_income.other_income) }}</td>
+                </tr>
+                <tr class="total-row">
+                    <td><strong>Total Additional Income</strong></td>
+                    <td class="amount"><strong>${{ "{:,.2f}".format(result.income_breakdown.additional_income.total) }}</strong></td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="detail-group">
+            <h4>Tax-Exempt Interest</h4>
+            <table class="data-table">
+                <tr>
+                    <td>Tax-Exempt Interest (added back for MAGI)</td>
+                    <td class="amount">${{ "{:,.2f}".format(result.income_breakdown.tax_exempt_interest) }}</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</section>
+
+<section class="report-section">
+    <h3>Capital Gains Analysis</h3>
+    <div id="capital-gains-chart"></div>
+</section>
+
+<section class="report-section">
+    <h3>Deductions & Adjustments</h3>
+    <table class="data-table">
+        <tr>
+            <td>Student Loan Interest</td>
+            <td class="amount">${{ "{:,.2f}".format(result.deductions_breakdown.student_loan_interest) }}</td>
+        </tr>
+        <tr>
+            <td>IRA Contributions</td>
+            <td class="amount">${{ "{:,.2f}".format(result.deductions_breakdown.ira_contributions) }}</td>
+        </tr>
+        <tr>
+            <td>HSA Contributions</td>
+            <td class="amount">${{ "{:,.2f}".format(result.deductions_breakdown.hsa_contributions) }}</td>
+        </tr>
+        <tr>
+            <td>Self-Employment Tax</td>
+            <td class="amount">${{ "{:,.2f}".format(result.deductions_breakdown.self_employment_tax) }}</td>
+        </tr>
+        <tr>
+            <td>Other Adjustments</td>
+            <td class="amount">${{ "{:,.2f}".format(result.deductions_breakdown.other_adjustments) }}</td>
+        </tr>
+        <tr class="total-row">
+            <td><strong>Total Adjustments to Income</strong></td>
+            <td class="amount"><strong>${{ "{:,.2f}".format(result.deductions_breakdown.total_adjustments) }}</strong></td>
+        </tr>
+    </table>
+</section>
+
+{% if result.tax_result %}
+<section class="report-section">
+    <h3>Estimated Tax Liability</h3>
+
+    <div class="tax-summary">
+        <div class="key-metrics">
+            <div class="metric-card">
+                <div class="metric-label">Federal Tax</div>
+                <div class="metric-value tax-amount">${{ "{:,.2f}".format(result.tax_result.total_federal_tax) }}</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">NC State Tax</div>
+                <div class="metric-value tax-amount">${{ "{:,.2f}".format(result.tax_result.state_tax) }}</div>
+            </div>
+            <div class="metric-card highlight-tax">
+                <div class="metric-label">Total Tax</div>
+                <div class="metric-value">${{ "{:,.2f}".format(result.tax_result.total_tax) }}</div>
+            </div>
+        </div>
+
+        <div class="tax-rates">
+            <p><strong>Effective Tax Rate:</strong> {{ "{:.2f}".format(result.tax_result.effective_tax_rate) }}%</p>
+            <p><strong>Federal Marginal Rate:</strong> {{ "{:.0f}".format(result.tax_result.federal_marginal_rate) }}%</p>
+            <p><strong>After-Tax Income:</strong> ${{ "{:,.2f}".format(result.tax_result.after_tax_income) }}</p>
+        </div>
+    </div>
+
+    <div id="tax-breakdown-chart"></div>
+
+    <div class="income-details">
+        <div class="detail-group">
+            <h4>Federal Income Tax Breakdown</h4>
+            <table class="data-table">
+                <tr>
+                    <td>Ordinary Income (ST Gains + Interest)</td>
+                    <td class="amount">${{ "{:,.2f}".format(result.tax_result.ordinary_income) }}</td>
+                </tr>
+                <tr>
+                    <td>Tax on Ordinary Income</td>
+                    <td class="amount tax-amount">${{ "{:,.2f}".format(result.tax_result.federal_ordinary_tax) }}</td>
+                </tr>
+                <tr>
+                    <td colspan="2">&nbsp;</td>
+                </tr>
+                <tr>
+                    <td>Preferential Income (LT Gains + Dividends)</td>
+                    <td class="amount">${{ "{:,.2f}".format(result.tax_result.preferential_income) }}</td>
+                </tr>
+                <tr>
+                    <td>Tax on Preferential Income (0%/15%/20%)</td>
+                    <td class="amount tax-amount">${{ "{:,.2f}".format(result.tax_result.federal_preferential_tax) }}</td>
+                </tr>
+                <tr>
+                    <td colspan="2">&nbsp;</td>
+                </tr>
+                <tr>
+                    <td>Standard Deduction</td>
+                    <td class="amount">${{ "{:,.2f}".format(result.tax_result.standard_deduction) }}</td>
+                </tr>
+                <tr class="total-row">
+                    <td><strong>Total Federal Tax</strong></td>
+                    <td class="amount"><strong>${{ "{:,.2f}".format(result.tax_result.total_federal_tax) }}</strong></td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="detail-group">
+            <h4>North Carolina State Tax</h4>
+            <table class="data-table">
+                <tr>
+                    <td>Total Income</td>
+                    <td class="amount">${{ "{:,.2f}".format(result.tax_result.total_income) }}</td>
+                </tr>
+                <tr>
+                    <td>NC Standard Deduction</td>
+                    <td class="amount">${{ "{:,.2f}".format(result.tax_result.total_income - result.tax_result.state_taxable_income) }}</td>
+                </tr>
+                <tr>
+                    <td>NC Taxable Income</td>
+                    <td class="amount">${{ "{:,.2f}".format(result.tax_result.state_taxable_income) }}</td>
+                </tr>
+                <tr>
+                    <td>NC Tax Rate</td>
+                    <td class="amount">4.75%</td>
+                </tr>
+                <tr class="total-row">
+                    <td><strong>NC State Tax</strong></td>
+                    <td class="amount"><strong>${{ "{:,.2f}".format(result.tax_result.state_tax) }}</strong></td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <div class="tax-disclaimer">
+        <p><strong>Disclaimer:</strong> These tax calculations are estimates for planning purposes only.
+        Actual tax liability may vary based on additional factors not captured here.
+        Consult a qualified tax professional for accurate tax advice.</p>
+    </div>
+</section>
+{% endif %}
+
+{% if result.roth_suggestion and result.roth_suggestion.has_opportunity %}
+<section class="report-section optimization-section">
+    <h3>💡 Tax Optimization Opportunities</h3>
+
+    <div class="opportunity-callout">
+        <div class="opportunity-header">
+            <span class="opportunity-icon">✓</span>
+            <h4>Roth Conversion Opportunity Identified</h4>
+        </div>
+        <p class="opportunity-summary">
+            Your current MAGI (${{ "{:,.2f}".format(result.roth_suggestion.current_magi) }})
+            is below your target (${{ "{:,.2f}".format(result.roth_suggestion.target_magi) }}).
+        </p>
+    </div>
+
+    <div class="optimization-details">
+        <div class="optimization-card highlight-card">
+            <div class="card-label">Suggested Roth Conversion</div>
+            <div class="card-value">${{ "{:,.2f}".format(result.roth_suggestion.suggested_conversion) }}</div>
+        </div>
+
+        <div class="optimization-card">
+            <div class="card-label">Tax on Conversion</div>
+            <div class="card-value conversion-tax">${{ "{:,.2f}".format(result.roth_suggestion.conversion_tax) }}</div>
+        </div>
+
+        <div class="optimization-card">
+            <div class="card-label">Marginal Rate on Conversion</div>
+            <div class="card-value">{{ "{:.2f}".format(result.roth_suggestion.marginal_rate) }}%</div>
+        </div>
+    </div>
+
+    <div class="optimization-comparison">
+        <h4>Tax Impact Analysis</h4>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>Current (No Conversion)</th>
+                    <th>After Conversion</th>
+                    <th>Change</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Federal Tax</strong></td>
+                    <td class="amount">${{ "{:,.2f}".format(result.roth_suggestion.current_federal_tax) }}</td>
+                    <td class="amount">${{ "{:,.2f}".format(result.roth_suggestion.new_federal_tax) }}</td>
+                    <td class="amount increase">+${{ "{:,.2f}".format(result.roth_suggestion.new_federal_tax - result.roth_suggestion.current_federal_tax) }}</td>
+                </tr>
+                <tr>
+                    <td><strong>NC State Tax</strong></td>
+                    <td class="amount">${{ "{:,.2f}".format(result.roth_suggestion.current_state_tax) }}</td>
+                    <td class="amount">${{ "{:,.2f}".format(result.roth_suggestion.new_state_tax) }}</td>
+                    <td class="amount increase">+${{ "{:,.2f}".format(result.roth_suggestion.new_state_tax - result.roth_suggestion.current_state_tax) }}</td>
+                </tr>
+                <tr class="total-row">
+                    <td><strong>Total Tax</strong></td>
+                    <td class="amount"><strong>${{ "{:,.2f}".format(result.roth_suggestion.current_total_tax) }}</strong></td>
+                    <td class="amount"><strong>${{ "{:,.2f}".format(result.roth_suggestion.new_total_tax) }}</strong></td>
+                    <td class="amount increase"><strong>+${{ "{:,.2f}".format(result.roth_suggestion.conversion_tax) }}</strong></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="optimization-benefits">
+        <h4>Why Consider This Conversion?</h4>
+        <ul>
+            <li><strong>Fill Lower Tax Brackets:</strong> Convert while you're in a favorable tax bracket</li>
+            <li><strong>Tax-Free Growth:</strong> All future growth in the Roth IRA will be tax-free</li>
+            <li><strong>Tax-Free Withdrawals:</strong> Qualified Roth withdrawals are completely tax-free</li>
+            <li><strong>No RMDs:</strong> Roth IRAs have no required minimum distributions</li>
+        </ul>
+    </div>
+
+    <div class="optimization-disclaimer">
+        <p><strong>Important:</strong> This suggestion is for planning purposes only. Roth conversions are permanent and have tax implications.
+        Factors to consider include your current vs. future tax rates, time horizon, and overall financial situation.
+        Consult with a qualified tax advisor and financial planner before executing any Roth conversion strategy.</p>
+    </div>
+</section>
+{% endif %}
+
+<section class="report-section">
+    <h3>Realized Gains Details</h3>
+    <div class="table-container">
+        <table class="data-table transaction-table">
+            <thead>
+                <tr>
+                    <th>Symbol</th>
+                    <th>Name</th>
+                    <th>Opened</th>
+                    <th>Closed</th>
+                    <th>Days Held</th>
+                    <th>Quantity</th>
+                    <th>Proceeds</th>
+                    <th>Cost Basis</th>
+                    <th>Gain/Loss</th>
+                    <th>Term</th>
+                    <th>Wash Sale</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for gain in detailed_transactions.realized_gains %}
+                <tr>
+                    <td>{{ gain.symbol }}</td>
+                    <td class="name-col">{{ gain.name }}</td>
+                    <td>{{ gain.opened_date }}</td>
+                    <td>{{ gain.closed_date }}</td>
+                    <td>{{ gain.holding_period_days }}</td>
+                    <td>{{ gain.quantity }}</td>
+                    <td class="amount">${{ "{:,.2f}".format(gain.proceeds) }}</td>
+                    <td class="amount">${{ "{:,.2f}".format(gain.cost_basis) }}</td>
+                    <td class="amount {% if gain.gain_loss >= 0 %}positive{% else %}negative{% endif %}">
+                        ${{ "{:,.2f}".format(gain.gain_loss) }}
+                    </td>
+                    <td>{{ gain.term }}</td>
+                    <td>{% if gain.wash_sale %}Yes{% else %}No{% endif %}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<section class="report-section">
+    <h3>Income Transactions (Dividends & Interest)</h3>
+    <div class="table-container">
+        <table class="data-table transaction-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Action</th>
+                    <th>Symbol</th>
+                    <th>Description</th>
+                    <th>Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for txn in detailed_transactions.income_transactions %}
+                <tr>
+                    <td>{{ txn.date }}</td>
+                    <td>{{ txn.action }}</td>
+                    <td>{{ txn.symbol }}</td>
+                    <td class="name-col">{{ txn.description }}</td>
+                    <td class="amount">${{ "{:,.2f}".format(txn.amount) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<div class="form-actions">
+    <a href="/" class="btn-secondary">Calculate Again</a>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Income breakdown pie chart
+const incomeData = [{
+    values: [
+        {{ result.income_breakdown.investment_income.short_term_capital_gains }},
+        {{ result.income_breakdown.investment_income.long_term_capital_gains }},
+        {{ result.income_breakdown.investment_income.dividend_income }},
+        {{ result.income_breakdown.investment_income.interest_income }},
+        {{ result.income_breakdown.additional_income.wages }},
+        {{ result.income_breakdown.additional_income.business_income }},
+        {{ result.income_breakdown.additional_income.rental_income }},
+        {{ result.income_breakdown.additional_income.retirement_income }},
+        {{ result.income_breakdown.additional_income.other_income }}
+    ],
+    labels: [
+        'ST Capital Gains',
+        'LT Capital Gains',
+        'Dividends',
+        'Interest',
+        'Wages',
+        'Business Income',
+        'Rental Income',
+        'Retirement Income',
+        'Other Income'
+    ],
+    type: 'pie',
+    hole: 0.4,
+    textinfo: 'label+percent',
+    textposition: 'outside',
+    marker: {
+        colors: ['#e74c3c', '#3498db', '#2ecc71', '#f39c12', '#9b59b6', '#1abc9c', '#34495e', '#e67e22', '#95a5a6']
+    }
+}];
+
+const incomeLayout = {
+    title: 'Income Sources Distribution',
+    height: 500,
+    showlegend: true
+};
+
+Plotly.newPlot('income-pie-chart', incomeData, incomeLayout);
+
+// Capital gains bar chart
+const capitalGainsData = [{
+    x: ['Short-Term Gains', 'Long-Term Gains'],
+    y: [
+        {{ result.income_breakdown.investment_income.short_term_capital_gains }},
+        {{ result.income_breakdown.investment_income.long_term_capital_gains }}
+    ],
+    type: 'bar',
+    marker: {
+        color: ['#e74c3c', '#3498db']
+    },
+    text: [
+        '$' + {{ result.income_breakdown.investment_income.short_term_capital_gains }}.toFixed(2),
+        '$' + {{ result.income_breakdown.investment_income.long_term_capital_gains }}.toFixed(2)
+    ],
+    textposition: 'outside'
+}];
+
+const capitalGainsLayout = {
+    title: 'Capital Gains by Term',
+    yaxis: {
+        title: 'Amount ($)'
+    },
+    height: 400
+};
+
+Plotly.newPlot('capital-gains-chart', capitalGainsData, capitalGainsLayout);
+
+{% if result.tax_result %}
+// Tax breakdown pie chart
+const taxBreakdownData = [{
+    values: [
+        {{ result.tax_result.federal_ordinary_tax }},
+        {{ result.tax_result.federal_preferential_tax }},
+        {{ result.tax_result.state_tax }},
+        {{ result.tax_result.after_tax_income }}
+    ],
+    labels: [
+        'Federal Tax (Ordinary)',
+        'Federal Tax (Preferential)',
+        'NC State Tax',
+        'After-Tax Income'
+    ],
+    type: 'pie',
+    hole: 0.4,
+    textinfo: 'label+percent',
+    textposition: 'outside',
+    marker: {
+        colors: ['#e74c3c', '#e67e22', '#f39c12', '#27ae60']
+    }
+}];
+
+const taxBreakdownLayout = {
+    title: 'Income vs Tax Breakdown',
+    height: 500,
+    showlegend: true
+};
+
+Plotly.newPlot('tax-breakdown-chart', taxBreakdownData, taxBreakdownLayout);
+{% endif %}
+</script>
+{% endblock %}

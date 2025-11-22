@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+
+{% block title %}MAGI Calculator - Input Form{% endblock %}
+
+{% block content %}
+<div class="intro-section">
+    <h2>Calculate Your Modified Adjusted Gross Income (MAGI)</h2>
+    <p>This calculator uses your investment data and additional income sources to estimate your MAGI.</p>
+    <div class="data-files-info">
+        <h3>Data Files Loaded:</h3>
+        <ul>
+            <li><strong>Realized Gains:</strong> {{ gains_file }}</li>
+            <li><strong>Transactions:</strong> {{ transaction_file }}</li>
+        </ul>
+    </div>
+    <div class="saved-data-info" id="saved-data-info" style="display: none;">
+        <p><strong>📝 Your information is saved:</strong> Last updated <span id="last-saved-timestamp">Never</span></p>
+        <button type="button" id="clear-saved-data" class="btn-clear-data">Clear Saved Data</button>
+    </div>
+</div>
+
+<form action="/calculate" method="POST" class="magi-form">
+    <section class="form-section">
+        <h3>Tax Filing Information</h3>
+        <div class="form-group">
+            <label for="filing_status">Filing Status:</label>
+            <select id="filing_status" name="filing_status" required>
+                {% for status in filing_statuses %}
+                <option value="{{ status }}">{{ status }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="tax_year">Tax Year:</label>
+            <input type="number" id="tax_year" name="tax_year" value="2025" required>
+        </div>
+
+        <div class="form-group">
+            <label for="target_magi">
+                Target MAGI (optional):
+                <span class="help-text">
+                    Enter your desired MAGI for tax optimization (e.g., to fill a tax bracket or plan Roth conversions). Leave blank if not planning optimization.
+                </span>
+            </label>
+            <input type="number" id="target_magi" name="target_magi" step="0.01" min="0" placeholder="e.g., 50000">
+        </div>
+    </section>
+
+    <section class="form-section">
+        <h3>Additional Income (beyond investment data)</h3>
+        <div class="form-row">
+            <div class="form-group">
+                <label for="wages">Wages (W-2 Income):</label>
+                <input type="number" id="wages" name="wages" step="0.01" min="0" value="0">
+            </div>
+
+            <div class="form-group">
+                <label for="business_income">Business Income (Self-Employment):</label>
+                <input type="number" id="business_income" name="business_income" step="0.01" value="0">
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="rental_income">Rental Income:</label>
+                <input type="number" id="rental_income" name="rental_income" step="0.01" value="0">
+            </div>
+
+            <div class="form-group">
+                <label for="retirement_income">Retirement Income (401k, IRA withdrawals):</label>
+                <input type="number" id="retirement_income" name="retirement_income" step="0.01" value="0">
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="social_security">Social Security Benefits:</label>
+                <input type="number" id="social_security" name="social_security" step="0.01" value="0">
+            </div>
+
+            <div class="form-group">
+                <label for="other_income">Other Income:</label>
+                <input type="number" id="other_income" name="other_income" step="0.01" value="0">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="tax_exempt_interest">Tax-Exempt Interest (Municipal Bonds):</label>
+            <input type="number" id="tax_exempt_interest" name="tax_exempt_interest" step="0.01" value="0">
+            <small>This is added back to calculate MAGI</small>
+        </div>
+    </section>
+
+    <section class="form-section">
+        <h3>Deductions & Adjustments</h3>
+
+        <div class="form-group">
+            <label>
+                <input type="radio" name="use_standard_deduction" value="true" checked>
+                Use Standard Deduction
+            </label>
+            <label>
+                <input type="radio" name="use_standard_deduction" value="false">
+                Use Itemized Deductions
+            </label>
+        </div>
+
+        <div class="form-group" id="itemized_group" style="display: none;">
+            <label for="itemized_deductions">Itemized Deductions Amount:</label>
+            <input type="number" id="itemized_deductions" name="itemized_deductions" step="0.01" value="0">
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="student_loan_interest">Student Loan Interest Paid:</label>
+                <input type="number" id="student_loan_interest" name="student_loan_interest" step="0.01" value="0">
+            </div>
+
+            <div class="form-group">
+                <label for="ira_contributions">Traditional IRA Contributions:</label>
+                <input type="number" id="ira_contributions" name="ira_contributions" step="0.01" value="0">
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="hsa_contributions">HSA Contributions:</label>
+                <input type="number" id="hsa_contributions" name="hsa_contributions" step="0.01" value="0">
+            </div>
+
+            <div class="form-group">
+                <label for="self_employment_tax">Self-Employment Tax (half):</label>
+                <input type="number" id="self_employment_tax" name="self_employment_tax" step="0.01" value="0">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="other_adjustments">Other Adjustments to Income:</label>
+            <input type="number" id="other_adjustments" name="other_adjustments" step="0.01" value="0">
+        </div>
+    </section>
+
+    <div class="form-actions">
+        <button type="submit" class="btn-primary">Calculate MAGI</button>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='persistence.js') }}"></script>
+<script>
+    // Toggle itemized deductions field
+    const deductionRadios = document.querySelectorAll('input[name="use_standard_deduction"]');
+    const itemizedGroup = document.getElementById('itemized_group');
+
+    deductionRadios.forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            if (e.target.value === 'false') {
+                itemizedGroup.style.display = 'block';
+            } else {
+                itemizedGroup.style.display = 'none';
+            }
+        });
+    });
+</script>
+{% endblock %}
