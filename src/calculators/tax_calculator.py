@@ -261,6 +261,7 @@ class TaxCalculator:
         interest_income: Decimal,
         additional_income: Decimal,
         filing_status: FilingStatus,
+        deduction: Decimal = None,
     ) -> TaxResult:
         """
         Calculate complete federal and state tax liability.
@@ -272,6 +273,7 @@ class TaxCalculator:
             interest_income: Interest income
             additional_income: Other income (wages, business, etc.)
             filing_status: Tax filing status
+            deduction: Total deduction amount (standard or itemized). If None, uses standard deduction.
 
         Returns:
             TaxResult with complete tax breakdown
@@ -281,26 +283,29 @@ class TaxCalculator:
         preferential_income = long_term_gains + dividend_income
         total_income = ordinary_income + preferential_income
 
-        # Get standard deduction
-        standard_deduction = cls.STANDARD_DEDUCTIONS.get(
-            filing_status, cls.STANDARD_DEDUCTIONS[FilingStatus.SINGLE]
-        )
+        # Get deduction amount (use provided deduction or default to standard)
+        if deduction is None:
+            deduction_amount = cls.STANDARD_DEDUCTIONS.get(
+                filing_status, cls.STANDARD_DEDUCTIONS[FilingStatus.SINGLE]
+            )
+        else:
+            deduction_amount = deduction
 
         # Calculate taxable income
-        total_taxable = max(Decimal("0"), total_income - standard_deduction)
+        total_taxable = max(Decimal("0"), total_income - deduction_amount)
 
-        # Determine how much is ordinary vs preferential after standard deduction
+        # Determine how much is ordinary vs preferential after deduction
         if total_taxable == 0:
             taxable_ordinary = Decimal("0")
             taxable_preferential = Decimal("0")
         else:
-            # Standard deduction reduces ordinary income first, then preferential
-            taxable_ordinary = max(Decimal("0"), ordinary_income - standard_deduction)
-            if ordinary_income > standard_deduction:
+            # Deduction reduces ordinary income first, then preferential
+            taxable_ordinary = max(Decimal("0"), ordinary_income - deduction_amount)
+            if ordinary_income > deduction_amount:
                 taxable_preferential = preferential_income
             else:
-                # Standard deduction partially or fully absorbed ordinary income
-                remaining_deduction = standard_deduction - ordinary_income
+                # Deduction partially or fully absorbed ordinary income
+                remaining_deduction = deduction_amount - ordinary_income
                 taxable_preferential = max(Decimal("0"), preferential_income - remaining_deduction)
 
         # Calculate federal taxes
@@ -326,7 +331,7 @@ class TaxCalculator:
             ordinary_income=ordinary_income,
             preferential_income=preferential_income,
             total_income=total_income,
-            standard_deduction=standard_deduction,
+            standard_deduction=deduction_amount,
             taxable_income=total_taxable,
             federal_ordinary_tax=federal_ordinary_tax,
             federal_preferential_tax=federal_preferential_tax,

@@ -60,6 +60,7 @@ class RothConverter:
         additional_income: Decimal,
         filing_status: FilingStatus,
         current_tax_result,
+        deduction: Decimal = None,
     ) -> Optional[RothConversionSuggestion]:
         """
         Analyze whether there's a Roth conversion opportunity.
@@ -74,6 +75,7 @@ class RothConverter:
             additional_income: Other ordinary income
             filing_status: Tax filing status
             current_tax_result: Current TaxResult object
+            deduction: Total deduction amount (standard or itemized)
 
         Returns:
             RothConversionSuggestion if opportunity exists, None otherwise
@@ -98,6 +100,7 @@ class RothConverter:
             interest_income=new_interest,
             additional_income=new_additional,
             filing_status=filing_status,
+            deduction=deduction,
         )
 
         # Calculate the tax impact of the conversion

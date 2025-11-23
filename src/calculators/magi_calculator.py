@@ -136,6 +136,7 @@ class MAGICalculator:
             interest_income=investment_income.interest_income,
             additional_income=additional_income.total,
             filing_status=user_inputs.filing_status,
+            deduction=deductions.total_deductions,
         )
 
         # Analyze Roth conversion opportunity
@@ -151,6 +152,7 @@ class MAGICalculator:
                 additional_income=additional_income.total,
                 filing_status=user_inputs.filing_status,
                 current_tax_result=tax_result,
+                deduction=deductions.total_deductions,
             )
 
         return MAGIResult(
