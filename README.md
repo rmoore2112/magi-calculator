@@ -73,13 +73,23 @@ Both reports can be downloaded as CSV files from the Schwab website and should b
    ```
 
 3. Download your Schwab reports and place them in the `data/` directory:
-   - **Brokerage Gain Loss Report** (CSV format, typically named `*GainLoss*.csv`)
-   - **Brokerage Transaction Report** (CSV format, typically named `*Transactions*.csv`)
 
-   To download these from Schwab:
+   **Required File Naming:**
+
+   The system automatically detects CSV files based on these patterns:
+   - **Brokerage Gain Loss Report**: Filename must contain `GainLoss` (e.g., `Brokerage_GainLoss_20250115.csv`)
+   - **Brokerage Transaction Report**: Filename must contain `Transactions` (e.g., `Brokerage_Transactions_20250115.csv`)
+
+   **Important Naming Notes:**
+   - Include a date in YYYYMMDD format in the filename for proper sorting (e.g., `20250115` for January 15, 2025)
+   - If multiple files exist, the system automatically uses the most recent based on the filename
+   - The `.csv` extension is required
+
+   **To download these from Schwab:**
    - Log into your Schwab account
    - Navigate to the relevant reports section
    - Export each report as a CSV file
+   - Rename the files if needed to match the required patterns above
    - Save the CSV files to the `data/` directory in this project
 
 ## Usage
@@ -136,8 +146,8 @@ magi-calculator/
 ├── README.md               # This file
 ├── .gitignore             # Git ignore patterns
 ├── data/                  # CSV data files (not tracked in git)
-│   ├── *GainLoss*.csv
-│   └── *Transactions*.csv
+│   ├── *GainLoss*.csv     # Filename must contain "GainLoss"
+│   └── *Transactions*.csv # Filename must contain "Transactions"
 ├── src/
 │   ├── __init__.py
 │   ├── main.py            # Application entry point
