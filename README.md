@@ -38,6 +38,12 @@ Both reports can be downloaded as CSV files from the Schwab website and should b
   - HSA contributions
   - Self-employment tax
 
+- **Target MAGI Tracking**:
+  - Set a target MAGI goal for tax planning purposes
+  - Track your current MAGI against your target
+  - Useful for optimizing income to stay within specific MAGI thresholds (e.g., ACA subsidies, IRMAA tiers, Roth IRA eligibility)
+  - Visual indication of how close you are to your target
+
 - **Multiple Filing Statuses**:
   - Single
   - Married Filing Jointly
@@ -123,15 +129,21 @@ Open your web browser and navigate to the URL to access the calculator.
 ### Input Form
 
 1. **Tax Filing Information**: Select your filing status and tax year
-2. **Additional Income**: Enter income from sources beyond your investment accounts
-3. **Deductions & Adjustments**: Specify deductions and adjustments to income
-4. Click **Calculate MAGI** to generate your report
+2. **Target MAGI** (Optional): Enter a target MAGI amount to track your progress towards a specific goal
+   - Useful for staying below ACA subsidy thresholds
+   - Avoiding higher IRMAA Medicare premium tiers
+   - Maintaining Roth IRA contribution eligibility
+   - Other tax planning objectives
+3. **Additional Income**: Enter income from sources beyond your investment accounts
+4. **Deductions & Adjustments**: Specify deductions and adjustments to income
+5. Click **Calculate MAGI** to generate your report
 
 ### Understanding the Report
 
 The report includes:
 
 - **Key Metrics**: Total Income, AGI, and MAGI displayed prominently
+- **Target MAGI Tracking** (if target set): Shows your current MAGI vs. target with visual progress indicator
 - **Income Breakdown**: Pie chart and detailed tables showing income sources
 - **Capital Gains Analysis**: Bar chart comparing short-term vs long-term gains
 - **Deductions**: Summary of all adjustments to income
