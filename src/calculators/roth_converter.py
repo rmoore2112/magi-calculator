@@ -101,6 +101,7 @@ class RothConverter:
             additional_income=new_additional,
             filing_status=filing_status,
             deduction=deduction,
+            # Note: withholding/prior_year_tax not needed for Roth conversion comparison
         )
 
         # Calculate the tax impact of the conversion

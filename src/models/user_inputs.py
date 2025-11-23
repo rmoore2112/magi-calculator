@@ -63,6 +63,10 @@ class UserInputs:
     self_employment_tax: Decimal = Decimal(0)
     other_adjustments: Decimal = Decimal(0)
 
+    # Tax withholding and payments
+    federal_withholding: Decimal = Decimal(0)  # Federal tax withheld (W-2, estimated payments)
+    prior_year_tax: Decimal = None  # Optional: Prior year's total tax for safe harbor calculation
+
     def get_standard_deduction(self) -> Decimal:
         """Get standard deduction amount for filing status."""
         tax_year = TaxYear.for_2025()

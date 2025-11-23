@@ -137,6 +137,8 @@ class MAGICalculator:
             additional_income=additional_income.total,
             filing_status=user_inputs.filing_status,
             deduction=deductions.total_deductions,
+            federal_withholding=user_inputs.federal_withholding,
+            prior_year_tax=user_inputs.prior_year_tax,
         )
 
         # Analyze Roth conversion opportunity

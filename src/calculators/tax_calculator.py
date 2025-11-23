@@ -2,9 +2,30 @@
 
 from decimal import Decimal
 from dataclasses import dataclass
-from typing import Tuple
+from typing import Tuple, Optional
 
 from ..models.user_inputs import FilingStatus
+
+
+@dataclass
+class QuarterlyPaymentInfo:
+    """Information about quarterly estimated tax payment requirements."""
+
+    required: bool
+    estimated_payment: Decimal  # Suggested quarterly payment amount
+    total_underpayment: Decimal  # Amount that will be owed at tax time
+    reason: str  # Explanation of why payments are required
+    safe_harbor_amount: Decimal  # Minimum to pay to avoid penalty
+
+    def to_dict(self) -> dict:
+        """Convert to dictionary for template rendering."""
+        return {
+            "required": self.required,
+            "estimated_payment": float(self.estimated_payment),
+            "total_underpayment": float(self.total_underpayment),
+            "reason": self.reason,
+            "safe_harbor_amount": float(self.safe_harbor_amount),
+        }
 
 
 @dataclass
@@ -35,9 +56,12 @@ class TaxResult:
     effective_tax_rate: Decimal  # Total tax / total income
     federal_marginal_rate: Decimal  # Highest bracket reached
 
+    # Quarterly payments
+    quarterly_payment_info: Optional[QuarterlyPaymentInfo] = None
+
     def to_dict(self) -> dict:
         """Convert to dictionary for template rendering."""
-        return {
+        result = {
             "ordinary_income": float(self.ordinary_income),
             "preferential_income": float(self.preferential_income),
             "total_income": float(self.total_income),
@@ -53,6 +77,9 @@ class TaxResult:
             "effective_tax_rate": float(self.effective_tax_rate),
             "federal_marginal_rate": float(self.federal_marginal_rate),
         }
+        if self.quarterly_payment_info:
+            result["quarterly_payment_info"] = self.quarterly_payment_info.to_dict()
+        return result
 
 
 class TaxCalculator:
@@ -253,6 +280,80 @@ class TaxCalculator:
         return taxable_income, tax
 
     @classmethod
+    def calculate_quarterly_payment_requirement(
+        cls,
+        total_federal_tax: Decimal,
+        federal_withholding: Decimal,
+        prior_year_tax: Optional[Decimal],
+        filing_status: FilingStatus,
+    ) -> QuarterlyPaymentInfo:
+        """
+        Determine if quarterly estimated tax payments are required.
+
+        IRS rules require quarterly payments if:
+        1. You'll owe at least $1,000 in tax when you file, AND
+        2. Your withholding will be less than the smaller of:
+           - 90% of current year tax
+           - 100% of prior year tax (110% if prior year AGI > $150K/$75K)
+
+        Args:
+            total_federal_tax: Current year's total federal tax liability
+            federal_withholding: Federal tax already withheld/paid
+            prior_year_tax: Prior year's total tax (optional, for safe harbor)
+            filing_status: Tax filing status
+
+        Returns:
+            QuarterlyPaymentInfo with payment requirements
+        """
+        # Calculate expected underpayment
+        underpayment = total_federal_tax - federal_withholding
+
+        # Check if underpayment exceeds $1,000 threshold
+        if underpayment < Decimal("1000"):
+            return QuarterlyPaymentInfo(
+                required=False,
+                estimated_payment=Decimal("0"),
+                total_underpayment=underpayment,
+                reason="Estimated underpayment is less than $1,000",
+                safe_harbor_amount=Decimal("0"),
+            )
+
+        # Calculate safe harbor amount (minimum to pay to avoid penalty)
+        # Generally 90% of current year tax or 100% of prior year tax
+        current_year_safe_harbor = total_federal_tax * Decimal("0.90")
+
+        # Use 100% of prior year tax if provided (110% if high income, but we'll use 100% for simplicity)
+        if prior_year_tax:
+            prior_year_safe_harbor = prior_year_tax
+            safe_harbor_amount = min(current_year_safe_harbor, prior_year_safe_harbor)
+            if federal_withholding >= prior_year_safe_harbor:
+                reason = f"Withholding meets prior year safe harbor ({float(prior_year_safe_harbor):,.0f})"
+            else:
+                reason = f"Underpayment exceeds $1,000 and withholding is less than safe harbor amount"
+        else:
+            safe_harbor_amount = current_year_safe_harbor
+            if federal_withholding >= current_year_safe_harbor:
+                reason = f"Withholding meets 90% of current year tax ({float(current_year_safe_harbor):,.0f})"
+            else:
+                reason = f"Underpayment exceeds $1,000 and withholding is less than 90% of current year tax"
+
+        # Determine if quarterly payments are required
+        payments_required = federal_withholding < safe_harbor_amount
+
+        # Calculate suggested quarterly payment
+        # Remaining amount needed divided by remaining quarters (assume we're planning ahead for 4 quarters)
+        remaining_needed = max(Decimal("0"), safe_harbor_amount - federal_withholding)
+        suggested_quarterly = remaining_needed / Decimal("4")
+
+        return QuarterlyPaymentInfo(
+            required=payments_required,
+            estimated_payment=suggested_quarterly,
+            total_underpayment=underpayment,
+            reason=reason,
+            safe_harbor_amount=safe_harbor_amount,
+        )
+
+    @classmethod
     def calculate_taxes(
         cls,
         short_term_gains: Decimal,
@@ -262,6 +363,8 @@ class TaxCalculator:
         additional_income: Decimal,
         filing_status: FilingStatus,
         deduction: Decimal = None,
+        federal_withholding: Decimal = Decimal("0"),
+        prior_year_tax: Optional[Decimal] = None,
     ) -> TaxResult:
         """
         Calculate complete federal and state tax liability.
@@ -274,6 +377,8 @@ class TaxCalculator:
             additional_income: Other income (wages, business, etc.)
             filing_status: Tax filing status
             deduction: Total deduction amount (standard or itemized). If None, uses standard deduction.
+            federal_withholding: Federal tax withheld or already paid
+            prior_year_tax: Prior year's total tax (for safe harbor calculation)
 
         Returns:
             TaxResult with complete tax breakdown
@@ -327,6 +432,14 @@ class TaxCalculator:
             (total_tax / total_income * 100) if total_income > 0 else Decimal("0")
         )
 
+        # Calculate quarterly payment requirement
+        quarterly_payment_info = cls.calculate_quarterly_payment_requirement(
+            total_federal_tax=total_federal_tax,
+            federal_withholding=federal_withholding,
+            prior_year_tax=prior_year_tax,
+            filing_status=filing_status,
+        )
+
         return TaxResult(
             ordinary_income=ordinary_income,
             preferential_income=preferential_income,
@@ -342,4 +455,5 @@ class TaxCalculator:
             after_tax_income=after_tax_income,
             effective_tax_rate=effective_rate,
             federal_marginal_rate=marginal_rate * 100,  # Convert to percentage
+            quarterly_payment_info=quarterly_payment_info,
         )

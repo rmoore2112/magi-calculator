@@ -289,6 +289,49 @@
         </div>
     </div>
 
+    {% if result.tax_result.quarterly_payment_info and result.tax_result.quarterly_payment_info.required %}
+    <div class="alert alert-warning" style="background-color: #fff3cd; border: 2px solid #ff9800; padding: 20px; margin: 20px 0; border-radius: 8px;">
+        <h3 style="color: #d32f2f; margin-top: 0;">⚠️ Quarterly Estimated Tax Payments Required</h3>
+        <p style="font-size: 1.1em; margin-bottom: 15px;">
+            <strong>You may need to make quarterly estimated tax payments to avoid penalties.</strong>
+        </p>
+
+        <div style="background-color: white; padding: 15px; border-radius: 5px; margin: 15px 0;">
+            <table class="data-table">
+                <tr>
+                    <td><strong>Estimated Underpayment</strong></td>
+                    <td class="amount"><strong>${{ "{:,.2f}".format(result.tax_result.quarterly_payment_info.total_underpayment) }}</strong></td>
+                </tr>
+                <tr>
+                    <td><strong>Safe Harbor Amount</strong></td>
+                    <td class="amount">${{ "{:,.2f}".format(result.tax_result.quarterly_payment_info.safe_harbor_amount) }}</td>
+                </tr>
+                <tr class="highlight-row" style="background-color: #e3f2fd;">
+                    <td><strong>Suggested Quarterly Payment</strong></td>
+                    <td class="amount"><strong>${{ "{:,.2f}".format(result.tax_result.quarterly_payment_info.estimated_payment) }}</strong></td>
+                </tr>
+            </table>
+        </div>
+
+        <p><strong>Reason:</strong> {{ result.tax_result.quarterly_payment_info.reason }}</p>
+
+        <div style="margin-top: 15px; padding: 10px; background-color: #e8f5e9; border-left: 4px solid #4caf50;">
+            <p style="margin: 0;"><strong>Quarterly Due Dates for 2025:</strong></p>
+            <ul style="margin: 10px 0; padding-left: 20px;">
+                <li>Q1: April 15, 2025 (Jan-Mar income)</li>
+                <li>Q2: June 16, 2025 (Apr-May income)</li>
+                <li>Q3: September 15, 2025 (Jun-Aug income)</li>
+                <li>Q4: January 15, 2026 (Sep-Dec income)</li>
+            </ul>
+        </div>
+
+        <p style="margin-top: 15px; font-size: 0.95em;">
+            <strong>Note:</strong> Make payments using IRS Form 1040-ES or through the IRS Direct Pay system at
+            <a href="https://www.irs.gov/payments" target="_blank" style="color: #1976d2;">www.irs.gov/payments</a>
+        </p>
+    </div>
+    {% endif %}
+
     <div class="tax-disclaimer">
         <p><strong>Disclaimer:</strong> These tax calculations are estimates for planning purposes only.
         Actual tax liability may vary based on additional factors not captured here.

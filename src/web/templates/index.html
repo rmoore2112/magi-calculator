@@ -141,6 +141,25 @@
         </div>
     </section>
 
+    <section class="form-section">
+        <h3>Tax Withholding & Payments</h3>
+        <p class="form-help">Enter your federal tax withholding to determine if quarterly estimated payments are required.</p>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="federal_withholding">Federal Tax Withheld (YTD):</label>
+                <input type="number" id="federal_withholding" name="federal_withholding" step="0.01" value="0">
+                <small>Include W-2 withholding and any estimated payments already made</small>
+            </div>
+
+            <div class="form-group">
+                <label for="prior_year_tax">Prior Year Total Tax (Optional):</label>
+                <input type="number" id="prior_year_tax" name="prior_year_tax" step="0.01" placeholder="Optional">
+                <small>Used for safe harbor calculation to avoid penalties</small>
+            </div>
+        </div>
+    </section>
+
     <div class="form-actions">
         <button type="submit" class="btn-primary">Calculate MAGI</button>
     </div>

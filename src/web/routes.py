@@ -80,6 +80,12 @@ def calculate():
         target_magi = form_data.get("target_magi")
         target_magi_decimal = Decimal(target_magi) if target_magi and target_magi.strip() else None
 
+        # Parse prior year tax (optional)
+        prior_year_tax_str = form_data.get("prior_year_tax")
+        prior_year_tax_decimal = (
+            Decimal(prior_year_tax_str) if prior_year_tax_str and prior_year_tax_str.strip() else None
+        )
+
         # Parse user inputs
         user_inputs = UserInputs(
             filing_status=filing_status,
@@ -99,6 +105,8 @@ def calculate():
             hsa_contributions=Decimal(form_data.get("hsa_contributions", 0) or 0),
             self_employment_tax=Decimal(form_data.get("self_employment_tax", 0) or 0),
             other_adjustments=Decimal(form_data.get("other_adjustments", 0) or 0),
+            federal_withholding=Decimal(form_data.get("federal_withholding", 0) or 0),
+            prior_year_tax=prior_year_tax_decimal,
         )
 
         # Find CSV files
