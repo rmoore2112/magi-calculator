@@ -1,10 +1,19 @@
 # MAGI Calculator
 
-A Python web application for calculating Modified Adjusted Gross Income (MAGI) based on investment transaction data and additional income sources.
+A Python web application for calculating Modified Adjusted Gross Income (MAGI) using Charles Schwab brokerage data and additional income sources.
 
 ## Overview
 
-The MAGI Calculator processes brokerage transaction data (realized gains/losses and transaction history) and combines it with user-provided income and deduction information to estimate your Modified Adjusted Gross Income (MAGI). MAGI is used to determine eligibility for various tax benefits, healthcare subsidies, and Medicare IRMAA surcharges.
+The MAGI Calculator processes Charles Schwab brokerage transaction data and combines it with user-provided income and deduction information to estimate your Modified Adjusted Gross Income (MAGI). MAGI is used to determine eligibility for various tax benefits, healthcare subsidies, and Medicare IRMAA surcharges.
+
+### Required Schwab Reports
+
+This calculator uses two standard CSV reports from the Charles Schwab web application:
+
+1. **Brokerage Gain Loss Report** - Contains realized gains and losses with detailed transaction information
+2. **Brokerage Transaction Report** - Contains all brokerage account transactions including dividends, interest, and trades
+
+Both reports can be downloaded as CSV files from the Schwab website and should be placed in the `data/` directory.
 
 ## Features
 
@@ -63,9 +72,15 @@ The MAGI Calculator processes brokerage transaction data (realized gains/losses 
    uv sync
    ```
 
-3. Place your CSV files in the `data/` directory:
-   - Realized gains/losses CSV (e.g., `Brokerage_GainLoss_Realized_Details_*.csv`)
-   - Transaction history CSV (e.g., `Brokerage_*_Transactions_*.csv`)
+3. Download your Schwab reports and place them in the `data/` directory:
+   - **Brokerage Gain Loss Report** (CSV format, typically named `*GainLoss*.csv`)
+   - **Brokerage Transaction Report** (CSV format, typically named `*Transactions*.csv`)
+
+   To download these from Schwab:
+   - Log into your Schwab account
+   - Navigate to the relevant reports section
+   - Export each report as a CSV file
+   - Save the CSV files to the `data/` directory in this project
 
 ## Usage
 
@@ -149,11 +164,13 @@ magi-calculator/
 └── tests/                 # Unit tests
 ```
 
-## CSV File Format
+## Schwab CSV File Format
 
-### Realized Gains CSV
+The application expects CSV files in the standard Charles Schwab export format.
 
-Expected columns:
+### Brokerage Gain Loss Report
+
+This is the standard Schwab realized gains/losses report. Expected columns include:
 - Symbol, Name
 - Opened Date, Closed Date
 - Quantity, Proceeds Per Share, Cost Per Share
@@ -163,9 +180,9 @@ Expected columns:
 - Term
 - Wash Sale?, Disallowed Loss
 
-### Transactions CSV
+### Brokerage Transaction Report
 
-Expected columns:
+This is the standard Schwab transaction history report. Expected columns include:
 - Date
 - Action (e.g., "Cash Dividend", "Bond Interest", "Buy", "Sell")
 - Symbol, Description
