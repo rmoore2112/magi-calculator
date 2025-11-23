@@ -116,8 +116,9 @@
     <div id="capital-gains-chart"></div>
 </section>
 
-{% if detailed_transactions.short_term_option_trades %}
-<section class="report-section">
+{% if false %}
+<!-- Old section - now moved to tabs -->
+<section class="report-section" style="display: none;">
     <h3>Short-Term Option Trades Detail</h3>
     <p>Total Short-Term Options Gain/Loss: <strong>${{ "{:,.2f}".format(result.income_breakdown.investment_income.short_term_options_gains) }}</strong></p>
     <div class="table-container">
@@ -424,7 +425,237 @@
 </section>
 {% endif %}
 
+<!-- Transaction Details Tabs -->
 <section class="report-section">
+    <h3>Transaction Details</h3>
+
+    <div class="tabs-container">
+        <!-- Tab Navigation -->
+        <div class="tab-nav">
+            <button class="tab-button active" onclick="switchTab(event, 'tab-short-term')">Short-Term Gains</button>
+            <button class="tab-button" onclick="switchTab(event, 'tab-options')">Short-Term Options</button>
+            <button class="tab-button" onclick="switchTab(event, 'tab-long-term')">Long-Term Gains</button>
+            <button class="tab-button" onclick="switchTab(event, 'tab-dividends')">Dividends</button>
+            <button class="tab-button" onclick="switchTab(event, 'tab-interest')">Interest</button>
+        </div>
+
+        <!-- Tab: Short-Term Gains (non-options) -->
+        <div id="tab-short-term" class="tab-content active">
+            <h4>Short-Term Capital Gains (Non-Options)</h4>
+            <div class="table-container">
+                <table class="data-table transaction-table">
+                    <thead>
+                        <tr>
+                            <th>Symbol</th>
+                            <th>Name</th>
+                            <th>Opened</th>
+                            <th>Closed</th>
+                            <th>Days Held</th>
+                            <th>Quantity</th>
+                            <th>Proceeds</th>
+                            <th>Cost Basis</th>
+                            <th>Gain/Loss</th>
+                            <th>Wash Sale</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% set short_term_count = 0 %}
+                        {% for gain in detailed_transactions.realized_gains %}
+                        {% if gain.term == "Short Term" and not (gain.name.lower().find('call') != -1 or gain.name.lower().find('put') != -1) %}
+                        {% set short_term_count = short_term_count + 1 %}
+                        <tr>
+                            <td>{{ gain.symbol }}</td>
+                            <td class="name-col">{{ gain.name }}</td>
+                            <td>{{ gain.opened_date }}</td>
+                            <td>{{ gain.closed_date }}</td>
+                            <td>{{ gain.holding_period_days }}</td>
+                            <td>{{ gain.quantity }}</td>
+                            <td class="amount">${{ "{:,.2f}".format(gain.proceeds) }}</td>
+                            <td class="amount">${{ "{:,.2f}".format(gain.cost_basis) }}</td>
+                            <td class="amount {% if gain.gain_loss >= 0 %}positive{% else %}negative{% endif %}">
+                                ${{ "{:,.2f}".format(gain.gain_loss) }}
+                            </td>
+                            <td>{% if gain.wash_sale %}Yes{% else %}No{% endif %}</td>
+                        </tr>
+                        {% endif %}
+                        {% endfor %}
+                        {% if short_term_count == 0 %}
+                        <tr><td colspan="10" style="text-align: center; padding: 20px;">No short-term gains (non-options)</td></tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Tab: Short-Term Options -->
+        <div id="tab-options" class="tab-content">
+            <h4>Short-Term Option Trades</h4>
+            <p>Total Short-Term Options Gain/Loss: <strong>${{ "{:,.2f}".format(result.income_breakdown.investment_income.short_term_options_gains) }}</strong></p>
+            <div class="table-container">
+                <table class="data-table transaction-table">
+                    <thead>
+                        <tr>
+                            <th>Symbol</th>
+                            <th>Name</th>
+                            <th>Opened</th>
+                            <th>Closed</th>
+                            <th>Days Held</th>
+                            <th>Quantity</th>
+                            <th>Proceeds</th>
+                            <th>Cost Basis</th>
+                            <th>Gain/Loss</th>
+                            <th>Wash Sale</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if detailed_transactions.short_term_option_trades %}
+                        {% for trade in detailed_transactions.short_term_option_trades %}
+                        <tr>
+                            <td>{{ trade.symbol }}</td>
+                            <td class="name-col">{{ trade.name }}</td>
+                            <td>{{ trade.opened_date }}</td>
+                            <td>{{ trade.closed_date }}</td>
+                            <td>{{ trade.holding_period_days }}</td>
+                            <td>{{ trade.quantity }}</td>
+                            <td class="amount">${{ "{:,.2f}".format(trade.proceeds) }}</td>
+                            <td class="amount">${{ "{:,.2f}".format(trade.cost_basis) }}</td>
+                            <td class="amount {% if trade.gain_loss >= 0 %}positive{% else %}negative{% endif %}">
+                                ${{ "{:,.2f}".format(trade.gain_loss) }}
+                            </td>
+                            <td>{% if trade.wash_sale %}Yes{% else %}No{% endif %}</td>
+                        </tr>
+                        {% endfor %}
+                        {% else %}
+                        <tr><td colspan="10" style="text-align: center; padding: 20px;">No short-term option trades</td></tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Tab: Long-Term Gains -->
+        <div id="tab-long-term" class="tab-content">
+            <h4>Long-Term Capital Gains</h4>
+            <div class="table-container">
+                <table class="data-table transaction-table">
+                    <thead>
+                        <tr>
+                            <th>Symbol</th>
+                            <th>Name</th>
+                            <th>Opened</th>
+                            <th>Closed</th>
+                            <th>Days Held</th>
+                            <th>Quantity</th>
+                            <th>Proceeds</th>
+                            <th>Cost Basis</th>
+                            <th>Gain/Loss</th>
+                            <th>Wash Sale</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% set long_term_count = 0 %}
+                        {% for gain in detailed_transactions.realized_gains %}
+                        {% if gain.term == "Long Term" %}
+                        {% set long_term_count = long_term_count + 1 %}
+                        <tr>
+                            <td>{{ gain.symbol }}</td>
+                            <td class="name-col">{{ gain.name }}</td>
+                            <td>{{ gain.opened_date }}</td>
+                            <td>{{ gain.closed_date }}</td>
+                            <td>{{ gain.holding_period_days }}</td>
+                            <td>{{ gain.quantity }}</td>
+                            <td class="amount">${{ "{:,.2f}".format(gain.proceeds) }}</td>
+                            <td class="amount">${{ "{:,.2f}".format(gain.cost_basis) }}</td>
+                            <td class="amount {% if gain.gain_loss >= 0 %}positive{% else %}negative{% endif %}">
+                                ${{ "{:,.2f}".format(gain.gain_loss) }}
+                            </td>
+                            <td>{% if gain.wash_sale %}Yes{% else %}No{% endif %}</td>
+                        </tr>
+                        {% endif %}
+                        {% endfor %}
+                        {% if long_term_count == 0 %}
+                        <tr><td colspan="10" style="text-align: center; padding: 20px;">No long-term gains</td></tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Tab: Dividends -->
+        <div id="tab-dividends" class="tab-content">
+            <h4>Dividend Income</h4>
+            <div class="table-container">
+                <table class="data-table transaction-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Action</th>
+                            <th>Symbol</th>
+                            <th>Description</th>
+                            <th>Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% set dividend_count = 0 %}
+                        {% for txn in detailed_transactions.income_transactions %}
+                        {% if 'dividend' in txn.action.lower() %}
+                        {% set dividend_count = dividend_count + 1 %}
+                        <tr>
+                            <td>{{ txn.date }}</td>
+                            <td>{{ txn.action }}</td>
+                            <td>{{ txn.symbol }}</td>
+                            <td class="name-col">{{ txn.description }}</td>
+                            <td class="amount">${{ "{:,.2f}".format(txn.amount) }}</td>
+                        </tr>
+                        {% endif %}
+                        {% endfor %}
+                        {% if dividend_count == 0 %}
+                        <tr><td colspan="5" style="text-align: center; padding: 20px;">No dividend transactions</td></tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Tab: Interest -->
+        <div id="tab-interest" class="tab-content">
+            <h4>Interest Income</h4>
+            <div class="table-container">
+                <table class="data-table transaction-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Action</th>
+                            <th>Symbol</th>
+                            <th>Description</th>
+                            <th>Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% set interest_count = 0 %}
+                        {% for txn in detailed_transactions.income_transactions %}
+                        {% if 'interest' in txn.action.lower() %}
+                        {% set interest_count = interest_count + 1 %}
+                        <tr>
+                            <td>{{ txn.date }}</td>
+                            <td>{{ txn.action }}</td>
+                            <td>{{ txn.symbol }}</td>
+                            <td class="name-col">{{ txn.description }}</td>
+                            <td class="amount">${{ "{:,.2f}".format(txn.amount) }}</td>
+                        </tr>
+                        {% endif %}
+                        {% endfor %}
+                        {% if interest_count == 0 %}
+                        <tr><td colspan="5" style="text-align: center; padding: 20px;">No interest transactions</td></tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="report-section" style="display: none;">
     <h3>Realized Gains Details</h3>
     <div class="table-container">
         <table class="data-table transaction-table">
@@ -466,7 +697,8 @@
     </div>
 </section>
 
-<section class="report-section">
+<!-- Old section - now moved to tabs -->
+<section class="report-section" style="display: none;">
     <h3>Income Transactions (Dividends & Interest)</h3>
     <div class="table-container">
         <table class="data-table transaction-table">
@@ -501,6 +733,25 @@
 
 {% block extra_scripts %}
 <script>
+// Tab switching functionality
+function switchTab(event, tabId) {
+    // Hide all tab contents
+    const tabContents = document.getElementsByClassName('tab-content');
+    for (let i = 0; i < tabContents.length; i++) {
+        tabContents[i].classList.remove('active');
+    }
+
+    // Remove active class from all buttons
+    const tabButtons = document.getElementsByClassName('tab-button');
+    for (let i = 0; i < tabButtons.length; i++) {
+        tabButtons[i].classList.remove('active');
+    }
+
+    // Show the selected tab and mark button as active
+    document.getElementById(tabId).classList.add('active');
+    event.currentTarget.classList.add('active');
+}
+
 // Income breakdown pie chart
 const incomeData = [{
     values: [
