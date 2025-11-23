@@ -39,6 +39,14 @@
                     <td class="amount">${{ "{:,.2f}".format(result.income_breakdown.investment_income.short_term_capital_gains) }}</td>
                 </tr>
                 <tr>
+                    <td style="padding-left: 30px;">Options</td>
+                    <td class="amount">${{ "{:,.2f}".format(result.income_breakdown.investment_income.short_term_options_gains) }}</td>
+                </tr>
+                <tr>
+                    <td style="padding-left: 30px;">Stocks & Other</td>
+                    <td class="amount">${{ "{:,.2f}".format(result.income_breakdown.investment_income.short_term_non_options_gains) }}</td>
+                </tr>
+                <tr>
                     <td>Long-Term Capital Gains</td>
                     <td class="amount">${{ "{:,.2f}".format(result.income_breakdown.investment_income.long_term_capital_gains) }}</td>
                 </tr>
@@ -107,6 +115,56 @@
     <h3>Capital Gains Analysis</h3>
     <div id="capital-gains-chart"></div>
 </section>
+
+{% if detailed_transactions.short_term_option_trades %}
+<section class="report-section">
+    <h3>Short-Term Option Trades Detail</h3>
+    <p>Total Short-Term Options Gain/Loss: <strong>${{ "{:,.2f}".format(result.income_breakdown.investment_income.short_term_options_gains) }}</strong></p>
+    <div class="table-container">
+        <table class="data-table transaction-table">
+            <thead>
+                <tr>
+                    <th>Symbol</th>
+                    <th>Name</th>
+                    <th>Opened</th>
+                    <th>Closed</th>
+                    <th>Days Held</th>
+                    <th>Quantity</th>
+                    <th>Proceeds</th>
+                    <th>Cost Basis</th>
+                    <th>Gain/Loss</th>
+                    <th>Wash Sale</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for trade in detailed_transactions.short_term_option_trades %}
+                <tr>
+                    <td>{{ trade.symbol }}</td>
+                    <td class="name-col">{{ trade.name }}</td>
+                    <td>{{ trade.opened_date }}</td>
+                    <td>{{ trade.closed_date }}</td>
+                    <td>{{ trade.holding_period_days }}</td>
+                    <td>{{ trade.quantity }}</td>
+                    <td class="amount">${{ "{:,.2f}".format(trade.proceeds) }}</td>
+                    <td class="amount">${{ "{:,.2f}".format(trade.cost_basis) }}</td>
+                    <td class="amount {% if trade.gain_loss >= 0 %}positive{% else %}negative{% endif %}">
+                        ${{ "{:,.2f}".format(trade.gain_loss) }}
+                    </td>
+                    <td>{% if trade.wash_sale %}Yes{% else %}No{% endif %}</td>
+                </tr>
+                {% endfor %}
+                <tr class="total-row">
+                    <td colspan="8"><strong>Total Short-Term Options</strong></td>
+                    <td class="amount {% if result.income_breakdown.investment_income.short_term_options_gains >= 0 %}positive{% else %}negative{% endif %}">
+                        <strong>${{ "{:,.2f}".format(result.income_breakdown.investment_income.short_term_options_gains) }}</strong>
+                    </td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endif %}
 
 <section class="report-section">
     <h3>Deductions & Adjustments</h3>

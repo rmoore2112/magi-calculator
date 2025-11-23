@@ -42,6 +42,12 @@ class RealizedGain:
         """Calculate holding period in days."""
         return (self.closed_date - self.opened_date).days
 
+    @property
+    def is_option(self) -> bool:
+        """Check if this is an option trade (Call or Put)."""
+        name_lower = self.name.lower()
+        return "call" in name_lower or "put" in name_lower
+
 
 @dataclass
 class Transaction:

@@ -186,23 +186,34 @@ class MAGICalculator:
         """Get detailed transaction data for reporting."""
         investment_income = self.aggregator.load_investment_income()
 
+        # Helper function to convert gain to dict
+        def gain_to_dict(g):
+            return {
+                "symbol": g.symbol,
+                "name": g.name,
+                "closed_date": g.closed_date.isoformat() if g.closed_date else None,
+                "opened_date": g.opened_date.isoformat() if g.opened_date else None,
+                "quantity": int(g.quantity),
+                "proceeds": float(g.proceeds),
+                "cost_basis": float(g.cost_basis),
+                "gain_loss": float(g.gain_loss),
+                "term": g.term,
+                "wash_sale": g.wash_sale,
+                "holding_period_days": g.holding_period_days,
+            }
+
+        # Filter short-term option trades
+        short_term_option_trades = [
+            gain_to_dict(g)
+            for g in investment_income.realized_gains
+            if g.is_short_term and g.is_option
+        ]
+
         return {
             "realized_gains": [
-                {
-                    "symbol": g.symbol,
-                    "name": g.name,
-                    "closed_date": g.closed_date.isoformat() if g.closed_date else None,
-                    "opened_date": g.opened_date.isoformat() if g.opened_date else None,
-                    "quantity": int(g.quantity),
-                    "proceeds": float(g.proceeds),
-                    "cost_basis": float(g.cost_basis),
-                    "gain_loss": float(g.gain_loss),
-                    "term": g.term,
-                    "wash_sale": g.wash_sale,
-                    "holding_period_days": g.holding_period_days,
-                }
-                for g in investment_income.realized_gains
+                gain_to_dict(g) for g in investment_income.realized_gains
             ],
+            "short_term_option_trades": short_term_option_trades,
             "income_transactions": [
                 {
                     "date": t.date.isoformat() if t.date else None,

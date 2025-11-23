@@ -24,6 +24,24 @@ class InvestmentIncome:
         )
 
     @property
+    def short_term_options_gains(self) -> Decimal:
+        """Calculate short-term capital gains from options only."""
+        return sum(
+            (g.short_term_gain_loss or Decimal(0))
+            for g in self.realized_gains
+            if g.is_short_term and g.is_option
+        )
+
+    @property
+    def short_term_non_options_gains(self) -> Decimal:
+        """Calculate short-term capital gains from non-option trades."""
+        return sum(
+            (g.short_term_gain_loss or Decimal(0))
+            for g in self.realized_gains
+            if g.is_short_term and not g.is_option
+        )
+
+    @property
     def long_term_capital_gains(self) -> Decimal:
         """Calculate total long-term capital gains."""
         return sum(

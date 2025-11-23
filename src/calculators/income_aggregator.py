@@ -109,6 +109,8 @@ class IncomeAggregator:
         return {
             "investment_income": {
                 "short_term_capital_gains": investment_income.short_term_capital_gains,
+                "short_term_options_gains": investment_income.short_term_options_gains,
+                "short_term_non_options_gains": investment_income.short_term_non_options_gains,
                 "long_term_capital_gains": investment_income.long_term_capital_gains,
                 "total_capital_gains": investment_income.total_capital_gains,
                 "dividend_income": investment_income.dividend_income,

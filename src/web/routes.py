@@ -18,16 +18,23 @@ DATA_DIR = Path(__file__).parent.parent.parent / "data"
 
 
 def find_csv_files():
-    """Find the CSV files in the data directory."""
+    """
+    Find the CSV files in the data directory.
+
+    Uses the most recent files based on YYYYMMDD timestamp in filename.
+    Since YYYYMMDD format sorts chronologically when sorted alphabetically,
+    we can use simple alphabetical sorting to get the latest files.
+    """
     gains_files = list(DATA_DIR.glob("*GainLoss*.csv"))
     transaction_files = list(DATA_DIR.glob("*Transactions*.csv"))
 
     if not gains_files or not transaction_files:
         return None, None
 
-    # Use the most recent files
-    gains_file = sorted(gains_files, reverse=True)[0]
-    transaction_file = sorted(transaction_files, reverse=True)[0]
+    # Sort by filename (YYYYMMDD timestamp sorts correctly alphabetically)
+    # and take the most recent (last in alphabetical order)
+    gains_file = sorted(gains_files, key=lambda x: x.name, reverse=True)[0]
+    transaction_file = sorted(transaction_files, key=lambda x: x.name, reverse=True)[0]
 
     return gains_file, transaction_file
 
